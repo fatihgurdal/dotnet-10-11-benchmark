@@ -1,0 +1,17 @@
+# Tum Dockerfile'lar (Dockerfile, Dockerfile.bench10/11, Dockerfile.dashboard) icin ortak build-context filtresi.
+# dashboard/ ve deploy/ BILEREK baglamda tutulur (Dockerfile.dashboard bunlari COPY'ler).
+**/bin/
+**/obj/
+.git
+.gitignore
+.DS_Store
+.vs/
+.idea/
+.vscode/
+*.user
+*.log
+**/*.png
+!dashboard/**/*.png
+results/
+screenshots/
+.playwright-mcp/

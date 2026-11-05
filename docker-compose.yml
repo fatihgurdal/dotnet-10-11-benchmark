@@ -1,0 +1,52 @@
+name: dotnet-bench
+
+# Her iki runtime icin CPU/bellek limitleri AYNI degiskenlerden okunur (adil karsilastirma).
+# Ornek: BENCH_CPUS=4 BENCH_MEM=4g docker compose up -d
+
+services:
+  bench10:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SDK_IMAGE: mcr.microsoft.com/dotnet/sdk:10.0-resolute
+        RUNTIME_IMAGE: mcr.microsoft.com/dotnet/aspnet:10.0-resolute
+        TFM: net10.0
+    image: dotnet-bench:10
+    container_name: bench10
+    ports:
+      - "5010:8080"
+    cpus: ${BENCH_CPUS:-2}
+    mem_limit: ${BENCH_MEM:-2g}
+    memswap_limit: ${BENCH_MEM:-2g}
+    restart: unless-stopped
+
+  bench11:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SDK_IMAGE: mcr.microsoft.com/dotnet/sdk:11.0-resolute
+        RUNTIME_IMAGE: mcr.microsoft.com/dotnet/aspnet:11.0-resolute
+        TFM: net11.0
+    image: dotnet-bench:11
+    container_name: bench11
+    ports:
+      - "5011:8080"
+    cpus: ${BENCH_CPUS:-2}
+    mem_limit: ${BENCH_MEM:-2g}
+    memswap_limit: ${BENCH_MEM:-2g}
+    restart: unless-stopped
+
+  dashboard:
+    image: nginx:1.27-alpine
+    container_name: bench-dashboard
+    ports:
+      - "8088:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - bench10
+      - bench11
+    restart: unless-stopped

@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1
+# Railway icin bench imaji. Dockerfile.bench10 ve Dockerfile.bench11 BIREBIR ayni olmali;
+# yalnizca 3 surume ozgu deger farklidir: SDK imaji, aspnet imaji ve TFM.
+# Her iki surum da AYNI isletim sistemi tabanini kullanir (Ubuntu 26.04 "resolute"): 11.0-noble etiketi yok,
+# 11.0 varsayilani 26.04; bu yuzden 10 icin de -resolute secildi (10.0 varsayilani 24.04 idi).
+# Build context = repo koku. Duz JIT uygulamasi: trimming/ReadyToRun/AOT yok.
+
+FROM mcr.microsoft.com/dotnet/sdk:11.0-resolute AS build
+WORKDIR /src
+
+# Katman onbellegi icin once csproj + restore
+COPY src/Bench.Api/Bench.Api.csproj src/Bench.Api/
+RUN dotnet restore src/Bench.Api/Bench.Api.csproj -p:BenchTfm=net11.0
+
+# Sonra kalan kaynak kodu
+COPY src/Bench.Api/ src/Bench.Api/
+
+RUN dotnet publish src/Bench.Api/Bench.Api.csproj \
+      -c Release \
+      -p:BenchTfm=net11.0 \
+      -p:UseAppHost=false \
+      -o /out \
+      --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute AS final
+WORKDIR /app
+COPY --from=build /out .
+
+# Railway PORT degiskenini enjekte eder; yoksa 8080.
+ENV PORT=8080
+EXPOSE 8080
+
+# NOT: DOTNET_* ayar degiskenleri bilerek set edilmiyor (varsayilanlar). DOTNET_PROCESSOR_COUNT
+# dagitim sirasinda (Railway Variables) her iki serviste AYNI degerle verilir.
+
+USER app
+# exec: dotnet PID 1 olur ve SIGTERM'i dogrudan alir.
+ENTRYPOINT ["sh","-c","ASPNETCORE_URLS=http://+:${PORT:-8080} exec dotnet Bench.Api.dll"]

@@ -1,0 +1,130 @@
+/* ==========================================================================
+   Yazdırma (Ctrl+P → PDF)
+   - Özet kartı açıksa: yalnızca 16:9 kart, koyu tema ile birebir.
+   - Aksi halde: açık renkli, mürekkep dostu sonuç raporu.
+   ========================================================================== */
+
+@page { size: A4 landscape; margin: 10mm; }
+
+html { font-size: 10.5pt; }
+
+/* ---------- Özet kartı yazdırma ---------- */
+body.card-open > *:not(#card-overlay) { display: none !important; }
+body.card-open { background: #0b0d1a !important; }
+body.card-open #card-overlay {
+  position: static;
+  display: block;
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+}
+body.card-open .overlay-inner { width: 100%; }
+body.card-open .overlay-bar { display: none; }
+body.card-open .slide,
+body.card-open .slide * {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+body.card-open .slide { box-shadow: none; break-inside: avoid; }
+
+/* ---------- Rapor yazdırma ---------- */
+body:not(.card-open) {
+  --bg0: #fff;
+  --bg1: #fff;
+  --card: #fff;
+  --line: #d9dbe6;
+  --line2: #c4c7d6;
+  --text: #11131f;
+  --text2: #2b2f45;
+  --muted: #5a5f7a;
+  --faint: #7a7f99;
+  --c10: #0369a1;
+  --c10b: #0284c7;
+  --c10-rgb: 3, 105, 161;
+  --c11: #be185d;
+  --c11b: #a21caf;
+  --c11-rgb: 190, 24, 93;
+  --vs: #6d28d9;
+  --vs-rgb: 109, 40, 217;
+  --good: #15803d;
+  --good-rgb: 21, 128, 61;
+  --bad: #b45309;
+  --bad-rgb: 180, 83, 9;
+  --neutral: #4338ca;
+  background: #fff !important;
+  color: var(--text);
+}
+body:not(.card-open) .bg,
+body:not(.card-open) .skip-link,
+body:not(.card-open) .top-actions,
+body:not(.card-open) .picker-panel,
+body:not(.card-open) .controls,
+body:not(.card-open) .toasts,
+body:not(.card-open) .present-hint,
+body:not(.card-open) .suite-actions,
+body:not(.card-open) .pill-retry,
+body:not(.card-open) .tiles,
+body:not(.card-open) .dimm,
+body:not(.card-open) .rt-status,
+body:not(.card-open) .stage-status,
+body:not(.card-open) #card-overlay { display: none !important; }
+
+body:not(.card-open) * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+body:not(.card-open) .grad,
+body:not(.card-open) .sh-big {
+  background: none !important;
+  color: var(--vs) !important;
+  -webkit-text-fill-color: var(--vs) !important;
+  filter: none !important;
+}
+body:not(.card-open) .panel,
+body:not(.card-open) .rt-card,
+body:not(.card-open) .chart-card,
+body:not(.card-open) .verdict,
+body:not(.card-open) .summary-hero,
+body:not(.card-open) .kpi,
+body:not(.card-open) .method details {
+  background: #fff !important;
+  border-color: var(--line2) !important;
+  break-inside: avoid;
+}
+body:not(.card-open) .rt-card { border-width: 1.5pt; }
+body:not(.card-open) .rt-net10 { border-color: var(--c10) !important; }
+body:not(.card-open) .rt-net11 { border-color: var(--c11) !important; }
+body:not(.card-open) .rt-glow,
+body:not(.card-open) .vs { display: none; }
+body:not(.card-open) .big,
+body:not(.card-open) .stat .v,
+body:not(.card-open) .win-badge { color: var(--text) !important; }
+body:not(.card-open) .win-badge { background: #fff; }
+body:not(.card-open) .arena { grid-template-columns: 1fr 1fr; gap: 6mm; }
+body:not(.card-open) .hero { padding: 0 0 4mm; }
+body:not(.card-open) .hero h1 { font-size: 20pt; }
+body:not(.card-open) .charts { grid-template-columns: 1fr 1fr; break-inside: avoid; }
+body:not(.card-open) .chart-box { height: 55mm; }
+body:not(.card-open) .suite { break-before: page; }
+body:not(.card-open) .srow { break-inside: avoid; }
+body:not(.card-open) .bar-track { background: #eef0f6; }
+body:not(.card-open) .bar-fill,
+body:not(.card-open) .chip,
+body:not(.card-open) .badge {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+body:not(.card-open) .method details > *:not(summary) { display: block; }
+body:not(.card-open) .method-body { display: grid !important; }
+body:not(.card-open) .verdict-head,
+body:not(.card-open) .kpi-value { color: var(--text) !important; }
+body:not(.card-open) .bar.win .bar-val,
+body:not(.card-open) .bar-val { color: var(--text) !important; }
+body:not(.card-open) .round,
+body:not(.card-open) .stage-head,
+body:not(.card-open) .limits-warn { background: #fff !important; }
+body:not(.card-open) .limits-warn { color: #92400e; }
+body:not(.card-open) .run-progress { display: none !important; }

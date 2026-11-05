@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>.NET 10 vs .NET 11 · Canlı Karşılaştırma</title>
+  <meta name="description" content="Aynı iş yükü, aynı kaynak sınırları: .NET 10 ile .NET 11'in canlı, gerçek ölçümlerle karşılaştırması.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0d1a">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/card.css">
+  <link rel="stylesheet" href="css/results.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"><div class="bg-grid"></div><div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div></div>
+  <a class="skip-link" href="#arena">Karşılaştırmaya geç</a>
+
+  <header class="topbar">
+    <div class="brand" aria-label=".NET 10 ve .NET 11 karşılaştırması">
+      <img src="assets/mark.svg" alt="" width="34" height="34" class="brand-mark">
+      <span class="brand-text"><span class="c10">·NET 10</span> <span class="brand-vs">vs</span> <span class="c11">·NET 11</span></span>
+    </div>
+    <div class="conn" id="conn" aria-live="polite"></div>
+    <nav class="top-actions" aria-label="Görünüm">
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-card" title="16:9 özet kartı">▣ Özet kartı</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-download" title="Sonuçları JSON olarak indir">↓ JSON</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-present" title="Sunum modu (P)" aria-pressed="false">⛶ Sunum modu <kbd>P</kbd></button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <p class="hero-kicker mono">CANLI KARŞILAŞTIRMA</p>
+      <h1>Aynı kod. İki runtime. <span class="grad">Gerçek ölçüm.</span></h1>
+      <p class="hero-sub">Aynı iş yükü, aynı kaynak sınırları — <span class="c10">.NET 10</span> ile <span class="c11">.NET 11</span> yan yana.</p>
+      <p class="hero-meta mono" id="hero-meta"></p>
+    </section>
+
+    <section class="panel picker-panel" aria-labelledby="picker-title">
+      <div class="panel-head">
+        <h2 id="picker-title">İş yükü</h2>
+        <p class="panel-hint" id="picker-hint">Karşılaştırmak istediğiniz senaryoyu seçin.</p>
+      </div>
+      <div class="wl-grid" id="workloads" role="radiogroup" aria-labelledby="picker-title"></div>
+    </section>
+
+    <section class="panel controls" aria-label="Çalıştırma ayarları">
+      <div class="ctl-group">
+        <span class="ctl-label" id="lbl-mode">Çalıştırma modu</span>
+        <div class="seg" role="group" aria-labelledby="lbl-mode" data-setting="mode">
+          <button type="button" data-value="fair" title="Sırayla, dönüşümlü sıra, tekrar + medyan">⚖ Adil ölçüm</button>
+          <button type="button" data-value="show" title="İki runtime aynı anda — sunum içindir">◐ Gösteri (aynı anda)</button>
+        </div>
+      </div>
+      <div class="ctl-group" id="grp-repeat">
+        <span class="ctl-label" id="lbl-repeat">Tekrar</span>
+        <div class="seg" role="group" aria-labelledby="lbl-repeat" data-setting="repeat">
+          <button type="button" data-value="1">1</button>
+          <button type="button" data-value="3">3</button>
+          <button type="button" data-value="5">5</button>
+        </div>
+      </div>
+      <div class="ctl-group">
+        <span class="ctl-label" id="lbl-scale">Yük ölçeği</span>
+        <div class="seg" role="group" aria-labelledby="lbl-scale" data-setting="scale">
+          <button type="button" data-value="1">1×</button>
+          <button type="button" data-value="2">2×</button>
+          <button type="button" data-value="4">4×</button>
+        </div>
+      </div>
+      <div class="ctl-group">
+        <span class="ctl-label" id="lbl-warm">Isınma turu</span>
+        <button type="button" class="switch" role="switch" id="warmup" aria-labelledby="lbl-warm" aria-checked="true"><span class="knob"></span><span class="switch-text">Açık</span></button>
+      </div>
+      <div class="ctl-actions">
+        <button type="button" class="btn btn-primary" id="btn-start">▶ Başlat</button>
+        <button type="button" class="btn btn-secondary" id="btn-suite">⏵⏵ Tüm testleri çalıştır</button>
+        <button type="button" class="btn btn-stop" id="btn-stop" disabled>⏹ Durdur</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-gc" title="İki runtime'da da GC.Collect çağırır">Belleği temizle</button>
+      </div>
+      <p class="ctl-hint" id="mode-hint"></p>
+    </section>
+
+    <section class="stage" id="arena" aria-label="Karşılaştırma">
+      <div class="stage-head">
+        <div class="stage-title" id="stage-title"></div>
+        <div class="stage-status mono" id="stage-status" aria-live="polite"></div>
+      </div>
+      <div class="run-progress" id="run-progress" hidden aria-hidden="true"><span></span></div>
+      <div class="limits-warn" id="limits-warn" role="alert" hidden>
+        <strong>⚠ Kaynak sınırları eşit değil</strong>
+        <span class="lw-detail"></span>
+      </div>
+      <div class="arena">
+        <div class="arena-slot" id="slot-net10"></div>
+        <div class="vs" aria-hidden="true"><span>VS</span></div>
+        <div class="arena-slot" id="slot-net11"></div>
+      </div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+    </section>
+
+    <section class="charts" aria-label="Canlı grafikler">
+      <figure class="chart-card">
+        <figcaption>
+          <span class="chart-title">CPU kullanımı</span>
+          <span class="chart-legend"><span class="lg lg-net10"><i></i>.NET 10</span><span class="lg lg-net11"><i></i>.NET 11</span></span>
+        </figcaption>
+        <div class="chart-box" id="chart-cpu"></div>
+        <p class="chart-note mono" id="cpu-note">% = konteynerdeki tüm çekirdekler üzerinden</p>
+      </figure>
+      <figure class="chart-card">
+        <figcaption>
+          <span class="chart-title">Bellek</span>
+          <span class="chart-legend"><span class="lg lg-solid"><i></i>çalışma kümesi</span><span class="lg lg-dash"><i></i>GC heap</span><span class="lg lg-net10"><i></i>.NET 10</span><span class="lg lg-net11"><i></i>.NET 11</span></span>
+        </figcaption>
+        <div class="chart-box" id="chart-mem"></div>
+      </figure>
+    </section>
+
+    <section class="panel suite" aria-labelledby="suite-title">
+      <div class="panel-head">
+        <h2 id="suite-title">Sonuçlar</h2>
+        <p class="panel-hint">Her iş yükünün en son ölçülen çifti (adil ölçümde turların medyanı). Tüm sayılar API'den gelen gerçek ölçümlerdir.</p>
+      </div>
+      <div id="suite"></div>
+    </section>
+  </main>
+
+  <footer class="method" id="method">
+    <details>
+      <summary><span>Metodoloji</span><span class="muted"> — sayılar nasıl ölçüldü?</span></summary>
+      <div class="method-body" id="method-body"></div>
+    </details>
+    <p class="foot-note mono">Sonuçlar bu makinede, Docker içinde ölçülmüştür. · Kısayollar: <kbd>P</kbd> sunum modu · <kbd>Esc</kbd> çıkış · <kbd>R</kbd> başlat · <kbd>←</kbd>/<kbd>→</kbd> iş yükü</p>
+  </footer>
+
+  <div class="present-hint mono" aria-hidden="true"><kbd>R</kbd> başlat · <kbd>←</kbd><kbd>→</kbd> iş yükü · <kbd>Esc</kbd> çıkış</div>
+
+  <div class="overlay" id="card-overlay" hidden role="dialog" aria-modal="true" aria-label="Özet kartı">
+    <div class="overlay-inner">
+      <div class="overlay-bar">
+        <span class="muted">16:9 özet kartı — ekran görüntüsü alın veya yazdırın</span>
+        <span class="overlay-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-card-print">⎙ Yazdır / PDF</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-card-close">✕ Kapat <kbd>Esc</kbd></button>
+        </span>
+      </div>
+      <div class="slide-wrap" id="slide"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">Bu panel JavaScript gerektirir.</p></noscript>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- The same source is built twice: -p:BenchTfm=net10.0 (SDK 10) and -p:BenchTfm=net11.0 (SDK 11). -->
+    <BenchTfm Condition="'$(BenchTfm)'==''">net10.0</BenchTfm>
+    <TargetFramework>$(BenchTfm)</TargetFramework>
+    <RootNamespace>Bench.Api</RootNamespace>
+    <AssemblyName>Bench.Api</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Pin the language version so both SDKs compile with identical semantics. -->
+    <LangVersion>13.0</LangVersion>
+    <!-- The Web SDK defaults to Server GC; the benchmark compares the workstation concurrent GC on both runtimes. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,14 @@
+#!/bin/sh
+# nginx imajinin /docker-entrypoint.d/ dizininde "source" edilir (calistirilabilir olmali).
+# Konteynerde IPv6 varsa nginx'in IPv6'da da dinlemesi icin NGINX_LISTEN_IPV6 degiskenini uretir.
+# Railway'in IPv6 edge/healthcheck trafigi icin gerekli; IPv6 olmayan ortamda (/proc/net/if_inet6
+# yok) bos yorum satiri uretilir ki nginx "Address family not supported" ile acilmasin.
+# NOT: nginx imajinin kendi 10-listen-on-ipv6-by-default.sh betigi yalnizca varsayilan default.conf'u
+# duzenler; bizim sablonumuzda bu yuzden listen satirini kendimiz uretiyoruz.
+
+if [ -f /proc/net/if_inet6 ]; then
+  NGINX_LISTEN_IPV6="listen [::]:${PORT:-8080};"
+else
+  NGINX_LISTEN_IPV6="# IPv6 yok: listen [::] atlandi"
+fi
+export NGINX_LISTEN_IPV6

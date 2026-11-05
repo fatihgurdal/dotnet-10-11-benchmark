@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label=".NET 10 vs .NET 11">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset=".5" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#11142a" stroke="url(#g)" stroke-width="2.5"/>
+  <circle cx="25" cy="32" r="12" fill="none" stroke="#7dd3fc" stroke-width="3.5"/>
+  <circle cx="39" cy="32" r="12" fill="none" stroke="#f472b6" stroke-width="3.5"/>
+  <path d="M32 22.25A12 12 0 0 1 32 41.75A12 12 0 0 1 32 22.25Z" fill="#a78bfa" opacity=".85"/>
+</svg>

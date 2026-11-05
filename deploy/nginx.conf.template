@@ -1,0 +1,82 @@
+# Railway icin dashboard (statik) + benchmark API'lerine SSE-uyumlu reverse proxy.
+# Bu dosya SABLONDUR: nginx imajinin 20-envsubst-on-templates.sh betigi, container acilisinda
+# yalnizca NGINX_ENVSUBST_FILTER ile izin verilen degiskenleri (PORT, BENCH10_UPSTREAM,
+# BENCH11_UPSTREAM, NGINX_LOCAL_RESOLVERS, NGINX_LISTEN_IPV6) doldurur.
+# nginx'in kendi degiskenleri ($host, $uri, $remote_addr, $upstream_*) DOKUNULMADAN kalir.
+# Yerel (compose) kullanim icin deploy/nginx.conf dosyasi ayrica durur; bu dosya onu degistirmez.
+
+server {
+    # Railway'in verdigi PORT. IPv4 + (varsa) IPv6: Railway'in edge'i / healthcheck'i IPv6 de kullanabilir.
+    listen ${PORT};
+    ${NGINX_LISTEN_IPV6}
+    server_name _;
+
+    # Imajin 15-local-resolvers.envsh betigi /etc/resolv.conf'tan uretir (IPv6 adresler koseli parantezli).
+    # ipv6=off YOK: Railway ic aglari (*.railway.internal) AAAA kaydi gerektirebilir.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Gelistirme sirasinda duzenlemeler aninda gorunsun
+    location ~* \.(html|js|css|json|map)$ {
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        expires -1;
+        try_files $uri =404;
+    }
+
+    location / {
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /healthz {
+        default_type text/plain;
+        return 200 "ok";
+    }
+
+    # Sorgu dizesi (?scale=1&warmup=1 ...) korunur: "rewrite ... break" yalnizca yolu degistirir, orijinal
+    # args otomatik eklenir (yerine "?" konmadigi surece); proxy_pass'te URI kismi YOK, bu yuzden nginx
+    # yeniden yazilmis URI + args'i oldugu gibi upstream'e gonderir. Degisken tabanli proxy_pass:
+    # backend ayakta degilken bile nginx acilir, adres her istekte resolver ile cozulur.
+
+    # ---- .NET 10 ----
+    location /bench10/ {
+        set $upstream_bench10 ${BENCH10_UPSTREAM};
+        rewrite ^/bench10/(.*)$ /$1 break;
+        proxy_pass $upstream_bench10;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_connect_timeout 10s;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+        chunked_transfer_encoding on;
+        gzip off;
+        add_header X-Accel-Buffering no always;
+    }
+
+    # ---- .NET 11 ----
+    location /bench11/ {
+        set $upstream_bench11 ${BENCH11_UPSTREAM};
+        rewrite ^/bench11/(.*)$ /$1 break;
+        proxy_pass $upstream_bench11;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_connect_timeout 10s;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+        chunked_transfer_encoding on;
+        gzip off;
+        add_header X-Accel-Buffering no always;
+    }
+}

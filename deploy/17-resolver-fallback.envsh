@@ -1,0 +1,12 @@
+#!/bin/sh
+# nginx imajinin /docker-entrypoint.d/ dizininde "source" edilir (calistirilabilir olmali).
+# 15-local-resolvers.envsh'tan SONRA, 20-envsubst-on-templates.sh'tan ONCE calisir.
+# /etc/resolv.conf'ta nameserver yoksa NGINX_LOCAL_RESOLVERS bos kalir ve sablon
+# "resolver  valid=10s;" (gecersiz) uretir; nginx acilmaz, Railway health check'i basarisiz olur.
+# Bos / yalnizca bosluk ise Docker'in dahili DNS adresine (127.0.0.11) duseriz.
+# POSIX sh / ash uyumlu (bash'e ozgu ${var// /} kullanilmaz).
+
+case "${NGINX_LOCAL_RESOLVERS:-}" in
+  *[![:space:]]*) ;;
+  *) export NGINX_LOCAL_RESOLVERS=127.0.0.11 ;;
+esac

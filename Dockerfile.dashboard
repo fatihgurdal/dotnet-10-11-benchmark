@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+# Railway icin dashboard: statik dosyalar imaja gomulur (bind mount yok) + nginx reverse proxy.
+# Build context = repo koku (kok .dockerignore dashboard/ ve deploy/ dizinlerini baglamda tutar).
+FROM nginx:1.27-alpine
+
+COPY dashboard/ /usr/share/nginx/html/
+
+# Resmi nginx imaji /etc/nginx/templates/*.template dosyalarini envsubst ile /etc/nginx/conf.d/ altina yazar.
+COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# 16-listen-ipv6.envsh: IPv6 varsa NGINX_LISTEN_IPV6 uretir ("source" edilir, calistirilabilir olmali).
+COPY deploy/16-listen-ipv6.envsh /docker-entrypoint.d/16-listen-ipv6.envsh
+RUN chmod 755 /docker-entrypoint.d/16-listen-ipv6.envsh
+
+# 17-resolver-fallback.envsh: NGINX_LOCAL_RESOLVERS bos kalirsa 127.0.0.11'e duser (bos "resolver" nginx'i bozar).
+# Sira: 15-local-resolvers (imaj) -> 16-listen-ipv6 -> 17-resolver-fallback -> 20-envsubst-on-templates (imaj).
+COPY deploy/17-resolver-fallback.envsh /docker-entrypoint.d/17-resolver-fallback.envsh
+RUN chmod 755 /docker-entrypoint.d/17-resolver-fallback.envsh
+
+# 15-local-resolvers.envsh (imajda hazir): bu degisken ayarliysa /etc/resolv.conf'tan NGINX_LOCAL_RESOLVERS uretir.
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+# envsubst yalnizca BU degiskenleri doldurur (awk regex'i; tum ad eslesmeli). nginx'in $host/$uri/... degiskenleri korunur.
+ENV NGINX_ENVSUBST_FILTER="^(PORT|BENCH10_UPSTREAM|BENCH11_UPSTREAM|NGINX_LOCAL_RESOLVERS|NGINX_LISTEN_IPV6)\$"
+
+ENV PORT=8080 \
+    BENCH10_UPSTREAM=http://bench10:8080 \
+    BENCH11_UPSTREAM=http://bench11:8080
+EXPOSE 8080
+
+# NOT: nginx root olarak calisir (master surecin varsayilan pid/temp dizinleri ve conf.d yazimi root ister);
+# yalnizca yuksek port (8080) dinlendigi icin ek yetki gerekmez. Statik dashboard, sirri yok.

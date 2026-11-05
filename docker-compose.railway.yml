@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------------------------
+# Railway icin compose dosyasi (Railway'de proje tuvaline surukle-birak ile ice aktarilir).
+# Her compose servisi Railway'de ayri bir servis olur (STAGED degisiklik olarak). Ayrintilar: RAILWAY.md
+#
+# Railway'in bu dosyadan KULLANDIGI anahtarlar: build (context/dockerfile), environment.
+# Railway'in YOKSAYDIGI / guvenilmeyen anahtarlar (bu yuzden dosyada kullanilmadi):
+#   ports, depends_on, container_name, restart, deploy.resources, cpus, mem_limit, volumes (bind mount).
+# CPU/bellek limitleri compose'tan ice AKTARILMAZ: Railway'de Service > Settings > Deploy >
+# Replica Limits alanindan elle, bench10 ve bench11 icin AYNI degerlerle girilir.
+# Degiskenlerde ${VAR:-default} enterpolasyonu kullanilmaz; yalnizca sabit degerler vardir.
+#
+# Yerelde yalnizca dogrulama / topoloji denemesi icin:
+#   docker compose -f docker-compose.railway.yml config
+#   docker compose -f docker-compose.railway.yml -f deploy/railway-local.override.yml up --build -d
+# ---------------------------------------------------------------------------------------------
+
+services:
+  bench10:
+    build:
+      context: .
+      dockerfile: Dockerfile.bench10
+    environment:
+      # Uygulama PORT'u dinler (ASPNETCORE_URLS > PORT > 8080). Onerilen: 8080 (dashboard upstream'leri 8080 varsayar).
+      PORT: "8080"
+      # Her iki bench servisinde AYNI deger olmali ve Railway Replica Limits'teki vCPU ile uyumlu olmali.
+      DOTNET_PROCESSOR_COUNT: "2"
+
+  bench11:
+    build:
+      context: .
+      dockerfile: Dockerfile.bench11
+    environment:
+      PORT: "8080"
+      # bench10 ile AYNI deger (adil karsilastirma).
+      DOTNET_PROCESSOR_COUNT: "2"
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    environment:
+      PORT: "8080"
+      # Railway ozel agi: http://<servis-adi>.railway.internal:<PORT>
+      BENCH10_UPSTREAM: "http://bench10.railway.internal:8080"
+      BENCH11_UPSTREAM: "http://bench11.railway.internal:8080"

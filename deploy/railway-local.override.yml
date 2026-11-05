@@ -1,0 +1,28 @@
+# SADECE Railway topolojisini dizustunde denemek icin (Railway'de kullanilmaz):
+#   docker compose -f docker-compose.railway.yml -f deploy/railway-local.override.yml up --build -d
+#   docker compose -f docker-compose.railway.yml -f deploy/railway-local.override.yml down
+# Dashboard host'ta 8089'dan acilir: http://localhost:8089
+# 8089 bilerek secildi: mevcut yigin 5010 / 5011 / 8088 portlarini kullaniyor, cakisma olmaz.
+# container_name'ler (rw-*) mevcut bench10/bench11/bench-dashboard konteynerleriyle cakismaz.
+
+services:
+  bench10:
+    container_name: rw-bench10
+    cpus: 2
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  bench11:
+    container_name: rw-bench11
+    cpus: 2
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  dashboard:
+    container_name: rw-dashboard
+    ports:
+      - "8089:8080"
+    environment:
+      # Yerelde Railway ic agi (*.railway.internal) yok; compose servis adlari kullanilir.
+      BENCH10_UPSTREAM: "http://bench10:8080"
+      BENCH11_UPSTREAM: "http://bench11:8080"
